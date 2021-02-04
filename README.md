@@ -4,7 +4,7 @@
 
 ## Setup
 
-Install the {clickrup} package:
+Install the package:
 
 ```
 remotes::install_github("ABbiodiversity/abmidata")

@@ -43,8 +43,6 @@ ad_get_table(table, site = NULL, year = NULL)
 }
 \description{
 Function names are prepended with \code{ad_} referring to ABMI data.
-}
-\details{
 \code{ad_get_table_names} lists names of tables available for download,
 \code{ad_get_table_header} lists table headers,
 \code{ad_get_table_size} gives the size of the table,
