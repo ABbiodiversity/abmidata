@@ -1,0 +1,69 @@
+---
+output:
+  md_document:
+    variant: gfm
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "README-"
+)
+```
+
+# abmidata
+
+> Public data from the Alberta Biodiversity Monitoring Institute
+
+## Setup
+
+Install the package:
+
+```{r eval=FALSE}
+remotes::install_github("ABbiodiversity/abmidata")
+```
+
+## Usage
+
+Load the package
+
+```{r}
+library(abmidata)
+```
+
+List table names
+
+```{r}
+n <- ad_get_table_names()
+data.frame(Description = head(n))
+```
+
+Get a table
+
+```{r}
+x <- ad_get_table("T01A", year=2010)
+str(x)
+```
+
+Handling missing value indicators
+
+```{r}
+y <- x[["Aspect (degrees)"]][1:100]
+y
+ad_convert_na(y)
+summary(ad_process_na(y))
+```
+
+## Documentation
+
+Metadata for the field protocols and the tables can be found
+in [this zip file](https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTIONDATA.zip).
+
+## Issues
+
+[https://github.com/ABbiodiversity/abmidata/issues](https://github.com/ABbiodiversity/abmidata/issues)
+
+## License
+
+[MIT](LICENSE) © 2020 Peter Solymos, ABMI
