@@ -1,0 +1,19 @@
+Package: abmidata
+Type: Package
+Title: Accessing Public Data from the ABMI
+Version: 0.0.1
+Date: 2021-02-11
+Author: Peter Solymos [aut, cre] (<https://orcid.org/0000-0001-7337-1740>), ABMI [cph]
+Maintainer: Peter Solymos <solymos@ualberta.ca>
+Description: Public data from the Alberta Biodiversity Monitoring Institute.
+License: MIT + file LICENSE
+LazyLoad: yes
+LazyData: true
+Imports: httr, jsonlite
+Suggests: knitr
+URL: https://github.com/abbiodiversity/abmidata
+BugReports: https://github.com/abbiodiversity/abmidata/issues
+VignetteBuilder: knitr
+RoxygenNote: 7.0.2
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
