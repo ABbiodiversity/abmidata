@@ -1,0 +1,15 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+.git*
+.DS_Store
+.*~
+^\.travis\.yml$
+^appveyor\.yml$
+^_pkgdown\.yml$
+^pkgdown$
+^README\.Rmd$
+^README\.md$
+^CODE_OF_CONDUCT\.md$
+^CONTRIBUTING\.md$
+^docs$
+^_pkgdown\.yml$
