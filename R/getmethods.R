@@ -1,7 +1,6 @@
 #' Get Methods for the ABMI Data API.
 #'
 #' Function names are prepended with `ad_` referring to ABMI data.
-#'
 #' `ad_get_table_names` lists names of tables available for download,
 #' `ad_get_table_header` lists table headers,
 #' `ad_get_table_size` gives the size of the table,
