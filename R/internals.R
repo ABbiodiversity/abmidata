@@ -25,7 +25,7 @@
         u <- sprintf("R/%s; R (%s)", getRversion(),
             paste(getRversion(), R.version$platform, R.version$arch, R.version$os))
     }
-    v <- try(as.character(packageVersion("abmidata")), silent = TRUE)
+    v <- try(as.character(utils::packageVersion("abmidata")), silent = TRUE)
     if (inherits(v, "try-error"))
         v <- "unreleased"
     paste0("abmidata/", v, "; ", u)
@@ -62,4 +62,14 @@
     cont <- .ad_process(resp)
     class(cont) <- c(class(cont), "ad_get")
     cont
+}
+
+## this function collects the different types of NAs
+.ad_specials <- function() {
+    c(
+        "Value Not Available"="VNA",
+        "Did Not Collect"="DNC",
+        "Protocol Not Available"="PNA",
+        "Species Not Identified"="SNI"
+    )
 }
