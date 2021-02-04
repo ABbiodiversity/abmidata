@@ -13,6 +13,9 @@ remotes::install_github("ABbiodiversity/abmidata")
 ## Usage
 
 ```
+## load the package
+library(abmidata)
+
 ## List table names
 ad_get_table_names()
 
