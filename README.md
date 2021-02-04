@@ -23,6 +23,11 @@ ad_get_table_names()
 ad_get_table("T01A", year=2010)
 ```
 
+## Documentation
+
+Metadata for the field protocols and the tables can be found
+in [this zip file](https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTIONDATA.zip).
+
 ## Issues
 
 [https://github.com/ABbiodiversity/abmidata/issues](https://github.com/ABbiodiversity/abmidata/issues)
