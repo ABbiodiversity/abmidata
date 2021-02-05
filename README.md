@@ -99,4 +99,4 @@ file](https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTION
 
 ## License
 
-[MIT](LICENSE) © 2020 Peter Solymos, ABMI
+[MIT](LICENSE) © 2020 Peter Solymos, Joan Fang, ABMI
