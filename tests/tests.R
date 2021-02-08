@@ -1,3 +1,5 @@
+# no need: this happens in vignette
+if (FALSE) {
 library(abmidata)
 
 n <- ad_get_table_names()
@@ -13,3 +15,4 @@ for (i in names(n)) {
 tab <- data.frame(descr=n, OK=!sapply(x, inherits, "try-error"))
 table(tab$OK)
 tab[!tab$OK,]
+}
