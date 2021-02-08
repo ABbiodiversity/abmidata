@@ -1,0 +1,75 @@
+---
+title: "Tables and Metadata"
+author: "Alberta Biodiversity Monitoring Institute"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Tables and Metadata}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+## load package
+suppressPackageStartupMessages({
+  library(abmidata)
+  library(knitr)
+  library(reactable)
+})
+## get table names
+n <- ad_get_table_names()
+n <- n[order(names(n))]
+
+## metadata
+l2 <- list.files("../metadata/pdf")
+l2x <- gsub("TMP_", "", l2)
+l2x <- gsub("RAW_", "", l2x)
+f2 <- function(i) which(startsWith(l2x, i))
+p <- sapply(names(n), f2)
+p1 <- p[sapply(p, length) > 0]
+
+n <- n[!startsWith(names(n), "C") & names(n) %in% names(p1)]
+
+## get table heads
+x <- list()
+for (i in names(n)) {
+    cat("\n", i)
+    x[[i]] <- try(ad_get_table_data(i, take=5L), silent=TRUE)
+    if (inherits(x[[i]], "try-error"))
+        cat("\tFAILED") else cat("\tOK")
+}
+
+OK <- !sapply(x, inherits, "try-error")
+nOK <- n[OK]
+pOK <- p1[names(nOK)]
+xOK <- x[names(nOK)]
+```
+
+This article provides a description of the tables
+that can be accessed via the abmidata R package
+and the ABMI public data API.
+
+```{r tabs,results = 'asis',echo=FALSE,warning=FALSE,message=FALSE}
+stub <- "https://github.com/ABbiodiversity/abmidata/raw/master/metadata/pdf/"
+for (j in seq_along(nOK)) {
+  id <- names(nOK)[j]
+  descr <- unname(gsub(paste0(id, " "), "", nOK[j]))
+  PDF <- pOK[[j]]
+  cat("## `", id, "`: ", descr, "\n\n", sep="")
+  if (length(PDF) == 1) {
+    cat("Metadata: [", gsub("\\.pdf", "", l2[PDF]), 
+          "](", stub, l2[PDF], ")\n", sep="")
+  } else {
+    cat("Metadata:\n\n")
+    for (k in seq_along(PDF))
+      cat("- [", gsub("\\.pdf", "", l2[PDF[k]]), 
+          "](", stub, l2[PDF[k]], ")\n", sep="")
+  }
+  cat("\n", sep="")
+  print(kable(xOK[[j]], caption=paste0("Head of table ", id)))
+  cat("\n", sep="")
+}
+```
