@@ -89,13 +89,22 @@ summary(ad_process_na(y))
 
 ## Documentation
 
-Metadata for the field protocols and the tables can be found in [this
-zip
-file](https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTIONDATA.zip).
+See the [package website](https://abbiodiversity.github.io/abmidata) for
+documentation. A list of tables and associated metadata can be found
+[here](https://abbiodiversity.github.io/abmidata/articles/abmidata02-metadata.html).
+Field protocols and the table metadata can be found in [this zip
+file](https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTIONDATA.zip)
+as well.
 
 ## Issues
 
 <https://github.com/ABbiodiversity/abmidata/issues>
+
+## Citation
+
+Solymos P, Fang J, ABMI (2021). *abmidata: Accessing Public Data from
+the ABMI*. R package version 0.0.1, \<URL:
+<https://github.com/abbiodiversity/abmidata>\>.
 
 ## License
 
