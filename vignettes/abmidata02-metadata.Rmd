@@ -47,9 +47,7 @@ pOK <- p1[names(nOK)]
 xOK <- x[names(nOK)]
 ```
 
-This article provides a description of the tables
-that can be accessed via the abmidata R package
-and the ABMI public data API.
+This article provides a description of the tables that can be accessed via the abmidata R package and the ABMI public data API.
 
 ```{r tabs,results = 'asis',echo=FALSE,warning=FALSE,message=FALSE}
 stub <- "https://github.com/ABbiodiversity/abmidata/raw/master/metadata/pdf/"
@@ -57,15 +55,15 @@ for (j in seq_along(nOK)) {
   id <- names(nOK)[j]
   descr <- unname(gsub(paste0(id, " "), "", nOK[j]))
   PDF <- pOK[[j]]
-  cat("## `", id, "`: ", descr, "\n\n", sep="")
+  cat("### `", id, "`: ", descr, "\n\n", sep="")
   if (length(PDF) == 1) {
     cat("Metadata: [", gsub("\\.pdf", "", l2[PDF]), 
-          "](", stub, l2[PDF], ")\n", sep="")
+          "](", stub, utils::URLencode(l2[PDF]), ")\n", sep="")
   } else {
     cat("Metadata:\n\n")
     for (k in seq_along(PDF))
       cat("- [", gsub("\\.pdf", "", l2[PDF[k]]), 
-          "](", stub, l2[PDF[k]], ")\n", sep="")
+          "](", stub, utils::URLencode(l2[PDF[k]]), ")\n", sep="")
   }
   cat("\n", sep="")
   print(kable(xOK[[j]], caption=paste0("Head of table ", id)))
