@@ -2,7 +2,7 @@
 
 > Public data from the Alberta Biodiversity Monitoring Institute
 
-![check](https://github.com/ABbiodiversity/abmidata/workflows/check/badge.svg)
+[![check](https://github.com/ABbiodiversity/abmidata/workflows/check/badge.svg)](analythium/covid-19)
 
 ## Setup
 
