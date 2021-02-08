@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 > Public data from the Alberta Biodiversity Monitoring Institute
 
-[![check](https://github.com/ABbiodiversity/abmidata/workflows/check/badge.svg)](analythium/covid-19)
+[![check](https://github.com/ABbiodiversity/abmidata/workflows/check/badge.svg)](https://github.com/ABbiodiversity/abmidata/actions)
 
 ## Setup
 
