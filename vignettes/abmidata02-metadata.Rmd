@@ -55,7 +55,8 @@ for (j in seq_along(nOK)) {
   id <- names(nOK)[j]
   descr <- unname(gsub(paste0(id, " "), "", nOK[j]))
   PDF <- pOK[[j]]
-  cat("### `", id, "`: ", descr, "\n\n", sep="")
+  cat("### ", id, ": ", descr, "\n\n", 
+      "Get the table as: `abmidata::ad_get_table(\"", id, "\")`\n\n", sep="")
   if (length(PDF) == 1) {
     cat("Metadata: [", gsub("\\.pdf", "", l2[PDF]), 
           "](", stub, utils::URLencode(l2[PDF]), ")\n", sep="")
