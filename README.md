@@ -2,6 +2,8 @@
 
 > Public data from the Alberta Biodiversity Monitoring Institute
 
+![check](https://github.com/ABbiodiversity/abmidata/workflows/check/badge.svg)
+
 ## Setup
 
 Install the package:
