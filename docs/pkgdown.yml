@@ -1,6 +1,8 @@
 pandoc: 2.7.3
 pkgdown: 1.6.1
 pkgdown_sha: ~
-articles: {}
-last_built: 2021-02-05T03:35Z
+articles:
+  abmidata01-introduction: abmidata01-introduction.html
+  abmidata02-metadata: abmidata02-metadata.html
+last_built: 2021-02-08T19:44Z
 

@@ -17,7 +17,6 @@ knitr::opts_chunk$set(
 suppressPackageStartupMessages({
   library(abmidata)
   library(knitr)
-  library(reactable)
 })
 ## get table names
 n <- ad_get_table_names()
