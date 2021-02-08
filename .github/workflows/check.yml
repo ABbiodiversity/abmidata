@@ -1,0 +1,35 @@
+on:
+  push:
+    branches:
+      - master
+
+name: check
+
+jobs:
+  deploy:
+    runs-on: macOS-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: R setup
+        uses: r-lib/actions/setup-r@v1
+
+      - name: Install dependencies
+        run: Rscript -e 'install.packages(c("httr", "jsonlite", "knitr", "pkgdown", "devtools"))'
+
+      - name: Check package
+        run: Rscript -e 'devtools::check()'
+
+      - name: Build site
+        run: Rscript -e 'pkgdown::build_site()'
+
+      - name: Deploy site
+        uses: JamesIves/github-pages-deploy-action@4.0.0
+        with:
+          branch: master # The branch the action should deploy to.
+          folder: docs # The folder the action should deploy.
+          target-folder: docs # directory on the deployment branch
+          clean: true # Automatically remove deleted files from the deploy branch
