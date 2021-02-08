@@ -17,6 +17,9 @@ jobs:
       - name: R setup
         uses: r-lib/actions/setup-r@v1
 
+      - name: Install pandoc
+        run: brew install pandoc
+
       - name: Install dependencies
         run: Rscript -e 'install.packages(c("httr", "jsonlite", "knitr", "pkgdown", "devtools"))'
 
