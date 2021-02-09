@@ -1,0 +1,490 @@
+---
+title: "Common Tasks"
+author: "Alberta Biodiversity Monitoring Institute"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Common Tasks}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup,include=FALSE}
+knitr::opts_chunk$set(
+  eval=FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+## load package
+suppressPackageStartupMessages({
+  library(knitr)
+})
+```
+
+This article provides code for common tasks, such as how to take the 'long format' data through the ABMI public data API and turn it into a more conventional 'wide format', i.e. samples x species. This is a common pre-requisite of data analysis.
+
+Prerequisites:
+
+```{r}
+library(abmidata)
+library(mefa4)
+
+## directory to save the results to
+ROOT <- ""
+
+## current local date
+DATE <- as.Date(Sys.time(), tz=Sys.timezone(location = TRUE))
+
+## ABMI site metadata
+gis <- read.csv("https://raw.githubusercontent.com/psolymos/abmianalytics/master/lookup/sitemetadata.csv")
+
+## turn characters into factors
+char2fact <- function(x) {
+  for (i in 1:ncol(x))
+    if (is.character(x[,i]))
+      x[,i] <- as.factor(x[,i])
+  x
+}
+```
+
+## Taxa collected at site centre
+
+This involves vascular plants, lichens, mosses, and soil mites.
+
+```{r}
+## common variables
+TAXA <- c("vplants", "mites", "mosses", "lichens")
+cn1 <- c("ABMISite", "Year", "subunit", "site_year", "site_year_sub", "offgrid", "nearest")
+cn2 <- c("SpeciesID", "CommonName", "ScientificName", "TaxonomicResolution",
+    "UniqueTaxonomicIdentificationNumber")
+
+## function to create unique IDs
+add_labels <- function(res, sub_col) {
+    res$offgrid <- startsWith(as.character(res$ABMISite), "OG")
+    res$subunit <- res[[sub_col]]
+    res[[sub_col]] <- NULL
+    res$site_year <- interaction(res$ABMISite, 
+                                 res$Year, drop=TRUE, sep="_")
+    res$site_year_sub <- interaction(res$ABMISite, 
+                                     res$Year, 
+                                     res$subunit, drop=TRUE, sep="_")
+    tmp <- strsplit(as.character(res$ABMISite), "-")
+    res$nearest <- sapply(tmp, function(z) {
+        zz <- if (length(z) > 1) z[3] else z[1]
+        as.integer(gsub("\\D+", "", zz))
+    })
+    res
+}
+
+## function to normalize species names
+normalize_species <- function(res, spgen_only=TRUE) {
+    if (spgen_only) {
+        levels(res$ScientificName) <- gsub("X ", "", levels(res$ScientificName))
+        levels(res$ScientificName) <- gsub(" x ", " ", levels(res$ScientificName))
+        levels(res$ScientificName) <- sapply(strsplit(levels(res$ScientificName), " "),
+          function(z) {
+            paste(z[1:min(2, length(z))], collapse=" ")
+        })
+
+        levels(res$TaxonomicResolution)[levels(res$TaxonomicResolution) %in%
+            c("Subspecies", "Variety")] <- "Species"
+    }
+    res$SpeciesID <- res$ScientificName
+    levels(res$SpeciesID) <- nameAlnum(levels(res$SpeciesID), 
+                                       capitalize="mixed", collapse="")
+    res$SpeciesID <- droplevels(res$SpeciesID)
+    res
+}
+
+## loop through TAXA
+for (taxon in TAXA) {
+    cat("taxon:", taxon, "\n  - pulling and normalizing data")
+    flush.console()
+
+    ## vascular plants -------------------------
+    if (taxon == "vplants") {
+        tab <- "T15"
+        sub_col <- "Quadrant"
+        allowed_subunits <- c("NE", "NW", "SE", "SW")
+        allowed_resolution <- c("Genus", "Species")
+        sub_max <- 4
+
+        res <- char2fact(ad_get_table(tab))
+        res0 <- res
+        save_list <- "res0"
+
+        colnames(res) <- gsub(" ", "", colnames(res))
+        res <- add_labels(res, sub_col=sub_col)
+        res <- normalize_species(res)
+    }
+
+    ## mosses -------------------------
+    if (taxon == "mosses") {
+        tab1 <- "T19A" # T19A Moss Identification (2003-2008)
+        tab2 <- "T19B" # T19B Moss Identification (since 2009)
+        sub_col <- "Quadrant"
+        allowed_subunits <- c("NE", "NW", "SE", "SW", "1ha")
+        allowed_resolution <- c("Genus", "Species")
+        sub_max <- 4
+
+        res1 <- char2fact(ad_get_table(tab1))
+        res2 <- char2fact(ad_get_table(tab2))
+        res01 <- res1
+        res02 <- res2
+        save_list <- c("res01", "res02")
+
+        colnames(res1) <- gsub(" ", "", colnames(res1))
+        res1[[sub_col]] <- as.factor("1ha")
+        res1 <- add_labels(res1, sub_col=sub_col)
+        res1 <- normalize_species(res1)
+
+        colnames(res2) <- gsub(" ", "", colnames(res2))
+        res2 <- add_labels(res2, sub_col=sub_col)
+        res2 <- normalize_species(res2)
+
+        tmp <- intersect(colnames(res1), colnames(res2))
+        res <- rbind(res1[,tmp], res2[,tmp])
+    }
+
+    ## lichens -------------------------
+    if (taxon == "lichens") {
+        tab1 <- "T20A" # T20A Lichen Identification (2003-2008)
+        tab2 <- "T20B" # T20B Lichen Identification (since 2009)
+        sub_col <- "Quadrant"
+        allowed_subunits <- c("NE", "NW", "SE", "SW", "1ha")
+        allowed_resolution <- c("Genus", "Species")
+        sub_max <- 4
+
+        res1 <- char2fact(ad_get_table(tab1))
+        res2 <- char2fact(ad_get_table(tab2))
+        res01 <- res1
+        res02 <- res2
+        save_list <- c("res01", "res02")
+
+        colnames(res1) <- gsub(" ", "", colnames(res1))
+        res1[[sub_col]] <- as.factor("1ha")
+        res1 <- add_labels(res1, sub_col=sub_col)
+        res1 <- normalize_species(res1)
+
+        colnames(res2) <- gsub(" ", "", colnames(res2))
+        res2 <- add_labels(res2, sub_col=sub_col)
+        res2 <- normalize_species(res2)
+
+        tmp <- intersect(colnames(res1), colnames(res2))
+        res <- rbind(res1[,tmp], res2[,tmp])
+    }
+
+    ## mites -------------------------
+    if (taxon == "mites") {
+        tab <- "T24A"
+        sub_col <- "Quadrant"
+        allowed_subunits <- c("NE", "NW", "SE", "SW")
+        allowed_resolution <- c("Genus", "Species", "Subspecies")
+        sub_max <- 4
+
+        res <- char2fact(ad_get_table(tab))
+        res0 <- res
+        save_list <- "res0"
+
+        colnames(res) <- gsub(" ", "", colnames(res))
+        res <- add_labels(res, sub_col=sub_col)
+        res <- normalize_species(res, spgen_only=FALSE) # keep spp names as is
+        res$CommonName <- NA
+    }
+
+    cat(" --- OK\n  - processing attributes and x-tabs")
+    flush.console()
+    ## sample attributes
+    x_site_year <- nonDuplicated(res, res$site_year, TRUE)[,cn1]
+    x_site_year$subunit <- x_site_year$site_year_sub <- NULL
+    rownames(x_site_year) <- x_site_year$site_year
+    x_site_year_sub <- nonDuplicated(res, res$site_year_sub, TRUE)[,cn1]
+    rownames(x_site_year_sub) <- x_site_year_sub$site_year_sub
+
+    ## species attributes
+    z <- nonDuplicated(res, res$SpeciesID, TRUE)[,c(cn2)]
+    rownames(z) <- z$SpeciesID
+
+    ## sample-species cross tabs
+    y_site_year_sub <- Xtab(~ site_year_sub + SpeciesID, res,
+        cdrop=c("NONE","SNI", "VNA", "DNC", "PNA"))
+    y_site_year_sub01 <- y_site_year_sub
+    y_site_year_sub01[y_site_year_sub01 > 0] <- 1
+    if (taxon %in% c("vplants", "mosses", "lichens"))
+        y_site_year_sub <- y_site_year_sub01
+
+    ## mefa bundles for sample/subunits
+    m_site_year_sub <- Mefa(y_site_year_sub, x_site_year_sub, z)
+    m_site_year_sub <- m_site_year_sub[,taxa(m_site_year_sub)$TaxonomicResolution %in%
+        allowed_resolution]
+    m_site_year_sub01 <- Mefa(y_site_year_sub01, x_site_year_sub, z)
+    m_site_year_sub01 <- m_site_year_sub01[,
+        taxa(m_site_year_sub)$TaxonomicResolution %in% allowed_resolution]
+
+    ## aggregated cross tabs for binomial tables
+    tmp <- m_site_year_sub01[samp(m_site_year_sub01)$subunit %in% allowed_subunits]
+    nn <- sum_by(rep(1, nrow(tmp)), droplevels(samp(tmp)$site_year))
+    y_site_year <- groupSums(xtab(tmp), 1, droplevels(samp(tmp)$site_year))
+    stopifnot(max(y_site_year) == sub_max)
+
+    ## aggregated mefa bundles for samples
+    m_site_year <- Mefa(y_site_year, x_site_year, z)
+    samp(m_site_year)$nQuadrant <- nn[match(rownames(m_site_year), rownames(nn)),"by"]
+
+    ## csv view
+    out_site_year <- data.frame(samp(m_site_year), as.matrix(xtab(m_site_year)))
+    out_site_year_sub <- data.frame(samp(m_site_year_sub),
+        as.matrix(xtab(m_site_year_sub)))
+    out_species <- taxa(m_site_year)
+
+    cat(" --- OK\n  - saving files")
+    flush.console()
+
+    ## save raw input
+    save(list=save_list, file=file.path(ROOT, "data", "raw", "species",
+        paste0(taxon, "_", DATE, ".RData")))
+
+    ## save bundles
+    save(m_site_year, m_site_year_sub, file=file.path(ROOT, "data", "inter", "species",
+        paste0(taxon, "_", DATE, ".RData")))
+
+    ## write csv & binary
+    write.csv(out_site_year, row.names=FALSE,
+        file=file.path(ROOT, 
+        paste0(taxon, "_SiteBinom_", DATE, ".csv")))
+    write.csv(out_site_year_sub, row.names=FALSE,
+        file=file.path(ROOT, 
+        paste0(taxon, "_Quadrant_", DATE, ".csv")))
+    write.csv(out_species, row.names=FALSE,
+        file=file.path(ROOT, 
+        paste0(taxon, "_Species_", DATE, ".csv")))
+    save(out_site_year, out_site_year_sub, out_species,
+        file=file.path(ROOT, 
+        paste0(taxon, "_out_", DATE, ".RData")))
+
+    ## vascular plants common/dominant
+    if (taxon == "vplants") {
+        res$comdom <- res$Present
+        levels(res$comdom)[!(levels(res$comdom) %in% 
+                               c("Dominant", "Common"))] <- "Uncommon"
+        table(res$comdom)
+        xt0 <- Xtab(~ site_year_sub + SpeciesID + comdom, res,
+            cdrop=c("NONE","SNI", "VNA", "DNC", "PNA"))
+        xt1 <- xt0$Uncommon
+        xt1[xt1>0] <- 1
+        xt10 <- xt0$Common * 10
+        xt10[xt10>0] <- 10
+        xt100 <- xt0$Dominant * 100
+        xt100[xt100>0] <- 100
+        y_comdom <- xt1
+        y_comdom[xt10>0] <- xt10[xt10>0]
+        y_comdom[xt100>0] <- xt100[xt100>0]
+        save(y_comdom, file=file.path(ROOT, 
+            paste0(taxon, "_comdom_", DATE, ".RData")))
+    }
+
+    cat(" --- OK\n")
+    flush.console()
+}
+```
+
+## Habitat elements
+
+Habitat elements are also measured at the site centre, but there are many different protocols and tables where the results are coming from.
+
+```{r}
+HEtabs <- list(
+    "T11"  = list(
+        name="Canopy cover",
+        slug="canopy-cover",
+        sub="Sub-ordinaltransect"),
+    "T12B" = list(
+        name="Cover layers",
+        slug="cover-layers",
+        sub="Quadrant"),
+    "T08"  = list(
+        name="CWD",
+        slug="cwd",
+        sub="Transect"),
+    "T01D" = list(
+        name="Ground cover",
+        slug="ground-cover",
+        sub=NULL),
+    "T25"  = list(
+        name="Mineral soil",
+        slug="mineral-soil",
+        sub="Quadrant"),
+    "T02A" = list(
+        name="Surface substrate",
+        slug="surface-substrate",
+        sub=NULL),
+    "T09"  = list(
+        name="Trees snags",
+        slug="trees-snags",
+        sub="Quadrant"))
+
+HabElem <- list()
+
+for (i in seq_along(HEtabs)) {
+    cat("* Pulling ", HEtabs[[i]]$name, "...")
+    res <- char2fact(ad_get_table(names(HEtabs)[i]))
+    colnames(res) <- gsub(" ", "", colnames(res))
+    if (is.null(HEtabs[[i]]$sub)) {
+        subcol <- "sub_col"
+        res$sub_col <- rep("DNC", nrow(res))
+    } else {
+        subcol <- HEtabs[[i]]$sub
+    }
+    res <- add_labels(res, sub_col=subcol)
+    HabElem[[HEtabs[[i]]$slug]] <- res
+
+    write.csv(res, row.names=FALSE,
+        file=file.path(ROOT, 
+        paste0("habitatelements_", HEtabs[[i]]$slug, "_", DATE, ".csv")))
+
+    cat(" OK\n")
+}
+save(HabElem,
+    file=file.path(ROOT, 
+    paste0("habitatelements_out_", DATE, ".RData")))
+```
+
+## Birds
+
+The ABMI public data API can be used to access bird point count data
+collected using the RiverForks (`RF`) and SongMeter ARU (`SM`) protocol.
+For latest data, see [WildTrax](https://www.wildtrax.ca/).
+
+```{r}
+taxon <- "birds"
+
+resRF0 <- char2fact(ad_get_table("T26A"))
+resSM0 <- char2fact(ad_get_table("T26B"))
+
+for (i in c("Precipitation", "Wind Conditions",  
+            "Industrial Noise", "Backgroud Noise")) {
+    resSM0[[i]] <- as.numeric(as.character(resSM0[[i]]))
+}
+
+resSM0$`ABMI Site` <- as.character(resSM0$`ABMI Site`)
+
+resRF <- resRF0
+resSM <- resSM0
+table(resRF$Year)
+table(resSM$Year)
+
+save(resRF0, resSM0, 
+    file=file.path(ROOT, paste0(taxon, "_", DATE, ".RData")))
+
+
+## River Forks, 3 intervals ------------------------------
+
+colnames(resRF) <- gsub(" ", "", colnames(resRF))
+resRF <- add_labels(resRF, sub_col="PointCountStation")
+#resRF <- normalize_species(resRF)
+resRF$SpeciesID <- resRF$CommonName
+levels(resRF$SpeciesID) <- nameAlnum(levels(resRF$SpeciesID), capitalize="mixed", collapse="")
+resRF$SpeciesID <- droplevels(resRF$SpeciesID)
+
+resRF$TBB_TIME_1ST_DETECTED <- resRF[["TimeFirstDetected(seconds)"]]
+resRF$TBB_INTERVAL_1 <- resRF[["Interval1(0-200seconds)"]]
+resRF$TBB_INTERVAL_2 <- resRF[["Interval2(201-400seconds)"]]
+resRF$TBB_INTERVAL_3 <- resRF[["Interval3(401-600seconds)"]]
+resRF$TBB_TIME_1ST_DETECTED <- as.character(resRF$TBB_TIME_1ST_DETECTED)
+table(resRF$TBB_TIME_1ST_DETECTED,resRF$Year)
+resRF$TBB_TIME_1ST_DETECTED[resRF$TBB_TIME_1ST_DETECTED %in%
+    c("DNC", "NONE", "VNA")] <- NA
+resRF$TBB_TIME_1ST_DETECTED <- as.numeric(as.character(resRF$TBB_TIME_1ST_DETECTED))
+resRF$period1st <- as.numeric(cut(resRF$TBB_TIME_1ST_DETECTED, c(-1, 200, 400, 600)))
+
+resRF$keep <-
+    resRF$TBB_INTERVAL_1 %in% c("0","1") &
+    resRF$TBB_INTERVAL_2 %in% c("0","1") &
+    resRF$TBB_INTERVAL_3 %in% c("0","1")
+#resRF <- resRF[resRF$TBB_INTERVAL_1 %in% c("0","1"),]
+#resRF <- resRF[resRF$TBB_INTERVAL_2 %in% c("0","1"),]
+#resRF <- resRF[resRF$TBB_INTERVAL_3 %in% c("0","1"),]
+resRF$TBB_INTERVAL_1 <- as.integer(resRF$TBB_INTERVAL_1) - 1L
+resRF$TBB_INTERVAL_2 <- as.integer(resRF$TBB_INTERVAL_2) - 1L
+resRF$TBB_INTERVAL_3 <- as.integer(resRF$TBB_INTERVAL_3) - 1L
+
+tmp <- col(matrix(0,sum(resRF$keep),3)) *
+    resRF[resRF$keep,c("TBB_INTERVAL_1","TBB_INTERVAL_2","TBB_INTERVAL_3")]
+tmp[tmp==0] <- NA
+tmp <- cbind(999,tmp)
+resRF$period123 <- 999
+resRF$period123[resRF$keep] <- apply(tmp, 1, min, na.rm=TRUE)
+resRF$period123[resRF$period123 > 3] <- 999
+with(resRF, table(period1st, period123))
+resRF$period1 <- pmin(resRF$period1st, resRF$period123)
+with(resRF, table(period1st, period1))
+with(resRF, table(period123, period1))
+
+
+## SM units --------------------------------------------
+
+colnames(resSM) <- gsub(" ", "", colnames(resSM))
+
+#cn <- c("ABMISite", "Year", "Quadrant", "Method",
+#    "Interval1(1minute)", "Interval2(1minute)", "Interval3(1minute)",
+#    "CommonName", "RecordingDate", "RecordingTime")
+#resSM <- resSM[,cn]
+tmp <- paste(resSM$RecordingDate, resSM$RecordingTime)
+resSM$Start <- strptime(tmp, "%d-%b-%y %H:%M:%S")
+
+resSM$Duration <- NA
+resSM$Duration[resSM$Method %in% c("11", "14")] <- 3
+resSM$Duration[resSM$Method %in% c("12", "13")] <- 1
+
+#resSM <- add_labels(resSM, sub_col="Quadrant")
+resSM$site_year_sub <- interaction(resSM$ABMISite, resSM$Year, resSM$Quadrant, drop=TRUE, sep="_")
+table(is.na(resSM$ABMISite))
+#resSM <- normalize_species(resSM)
+resSM$SpeciesID <- resSM$CommonName
+levels(resSM$SpeciesID) <- nameAlnum(levels(resSM$SpeciesID), capitalize="mixed", collapse="")
+resSM$SpeciesID <- droplevels(resSM$SpeciesID)
+
+## first detection interval
+resSM$int1 <- ifelse(resSM$`Interval1(1minute)` == "VNA", NA, as.integer(resSM$`Interval1(1minute)`))
+resSM$int2 <- ifelse(resSM$`Interval2(1minute)` == "VNA", NA, as.integer(resSM$`Interval2(1minute)`))
+resSM$int3 <- ifelse(resSM$`Interval3(1minute)` == "VNA", NA, as.integer(resSM$`Interval3(1minute)`))
+tmp <- col(resSM[,c("int1", "int2", "int3")])
+tmp[is.na(resSM[,c("int1", "int2", "int3")])] <- Inf
+tmp2 <- find_min(tmp)
+tmp2$value[is.infinite(tmp2$value)] <- NA
+resSM$res1 <- tmp2$value
+
+resSM$ToY <- resSM$Start$yday
+resSM$ToYc <- as.integer(cut(resSM$ToY, c(0, 105, 120, 140, 150, 160, 170, 180, 365)))
+
+resSM$visit <- interaction(resSM$site_year_sub, resSM$ToYc, drop=TRUE)
+
+resSM$ToD <- resSM$Start$hour + resSM$Start$min / 60
+resSM$ToDx <- round(resSM$ToD, 0)
+resSM$ToDc <- as.factor(ifelse(resSM$ToDx == 0, "Midnight", "Morning"))
+
+## crosstabs
+
+cd <- c("NONE","SNI", "VNA", "DNC", "PNA")
+
+xt_10 <- Xtab(~ site_year_sub + SpeciesID,
+    resRF[resRF$period123 <= 3,], cdrop=cd)
+
+xt_pts <- Xtab(~ site_year_sub + SpeciesID + period123, resRF, cdrop=cd)[1:3]
+xt_pts[[1]] <- as.matrix(xt_pts[[1]])
+xt_pts[[2]] <- as.matrix(xt_pts[[2]])
+xt_pts[[3]] <- as.matrix(xt_pts[[3]])
+x_pts <- nonDuplicated(resRF, site_year_sub, TRUE)
+x_pts <- x_pts[rownames(xt_pts[[1]]),]
+
+xt_stn <- as.matrix(Xtab(~ site_year_sub + SpeciesID, resSM, cdrop=cd))
+x_stn <- nonDuplicated(resSM, site_year_sub, TRUE)
+x_stn <- x_stn[rownames(xt_stn),]
+
+keep <- !is.na(resSM$visit)
+xt_vis <- as.matrix(Xtab(~ visit + SpeciesID, resSM[keep,], cdrop=cd))
+x_vis <- nonDuplicated(resSM[keep,], visit, TRUE)
+x_vis <- x_vis[rownames(xt_vis),]
+
+save(xt_pts, xt_stn, xt_vis, x_pts, x_stn, x_vis, xt_10, resSM, resRF,
+    file=file.path(ROOT, "birds-crosstabs.RData"))
+```
