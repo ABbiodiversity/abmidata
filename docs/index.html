@@ -104,11 +104,15 @@
 <div id="usage" class="section level2">
 <h2 class="hasAnchor">
 <a href="#usage" class="anchor"></a>Usage</h2>
-<p>Load the package</p>
+<div id="pulling-monitoring-data" class="section level3">
+<h3 class="hasAnchor">
+<a href="#pulling-monitoring-data" class="anchor"></a>Pulling monitoring data</h3>
+<p>The ABMI public data API pulls information from one of ABMI’s main databases.</p>
+<p>Load the R package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/abbiodiversity/abmidata">abmidata</a></span><span class="op">)</span>
 <span class="co">#&gt; abmidata 0.0.1    2021-02-11</span></code></pre></div>
-<p>List table names</p>
+<p>List names of tables available via the API:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/getmethods.html">ad_get_table_names</a></span><span class="op">(</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>Description <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span>
@@ -119,7 +123,7 @@
 <span class="co">#&gt; CT01C               CT01C Site Capability</span>
 <span class="co">#&gt; CT01B              CT01B Site Suitability</span>
 <span class="co">#&gt; T01C                 T01C Site Capability</span></code></pre></div>
-<p>Get a table</p>
+<p>Get a table by its ID, possibly filtered by site ID or by year:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/getmethods.html">ad_get_table</a></span><span class="op">(</span><span class="st">"T01A"</span>, year<span class="op">=</span><span class="fl">2010</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
@@ -138,7 +142,7 @@
 <span class="co">#&gt;  $ Elevation (metres)    : int  213 213 213 213 213 213 213 213 213 212 ...</span>
 <span class="co">#&gt;  $ Slope (degrees)       : chr  "0" "0" "0" "0" ...</span>
 <span class="co">#&gt;  $ Aspect (degrees)      : chr  "VNA" "VNA" "VNA" "VNA" ...</span></code></pre></div>
-<p>Handling missing value indicators</p>
+<p>ABMI data has specific placeholders for missing data indicating the <a href="https://abbiodiversity.github.io/abmidata/reference/helpers.html">reason for the missingness</a>. This poses challenges in R when the information is numeric. Here is how you can handle these missing value indicators:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[[</span><span class="st">"Aspect (degrees)"</span><span class="op">]</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>
 <span class="va">y</span>
@@ -168,10 +172,105 @@
 <span class="co">#&gt;  Max.   :1.00   Max.   :1.00   Max.   :0   Max.   :0   Max.   :260.00  </span>
 <span class="co">#&gt;                                                        NA's   :94</span></code></pre></div>
 </div>
+<div id="processing-data" class="section level3">
+<h3 class="hasAnchor">
+<a href="#processing-data" class="anchor"></a>Processing data</h3>
+<p>Once tables are loaded using the ABMI public data API, the data usually needs to be processed further. The tables are in ‘long format’ which means that e.g. sites and species are all in in their own columns:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Site</th>
+<th>Species</th>
+<th>Count</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Site 1</td>
+<td>A</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Site 1</td>
+<td>B</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>Site 1</td>
+<td>C</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>Site 2</td>
+<td>B</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>Site 2</td>
+<td>D</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>Site 3</td>
+<td>E</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>There are other R packages that can be used to turn the ‘long format’ data into a ‘wide format’ where e.g. sites represent rows and species represent columns:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Site</th>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+<th>D</th>
+<th>E</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>1</td>
+<td>2</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>2</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>Check out examples of how to do this for vascular plants, mites, mosses, lichens, and birds in <a href="https://abbiodiversity.github.io/abmidata/articles/abmidata03-commontasks.html">this article</a> about common data processing tasks.</p>
+</div>
+<div id="matching-monitoring-data-with-predictors" class="section level3">
+<h3 class="hasAnchor">
+<a href="#matching-monitoring-data-with-predictors" class="anchor"></a>Matching monitoring data with predictors</h3>
+<p>Once the monitoring data is in the desired format, one can match the site locations (and possibly years) with location/year specific predictor variables. One can use the <strong>field data</strong> about site condition to explain the distribution, abundance, or other measures of species and habitat elements at the ABMI sites.</p>
+<p>One can also use <strong>geospatial information</strong> extracted at the site coordinates. This, however, poses some challenges because exact site coordinates are not publicly available. However, restrictions around site confidentiality have been substantially relaxed and coordinates for most sites will soon be available for research purposes upon request. We will provide relevant information here as soon as it is available. In the meantime, please reach out to <a href="https://www.abmi.ca/home/contact-us.html">ABMI</a> for more information.</p>
+</div>
+</div>
 <div id="documentation" class="section level2">
 <h2 class="hasAnchor">
 <a href="#documentation" class="anchor"></a>Documentation</h2>
-<p>See the <a href="https://abbiodiversity.github.io/abmidata">package website</a> for documentation. A list of tables and associated metadata can be found <a href="https://abbiodiversity.github.io/abmidata/articles/abmidata02-metadata.html">here</a>. Field protocols and the table metadata can be found in <a href="https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTIONDATA.zip">this zip file</a> as well.</p>
+<p>See the <a href="https://abbiodiversity.github.io/abmidata">package website</a> for documentation. A list of tables and associated metadata can be found <a href="https://abbiodiversity.github.io/abmidata/articles/abmidata02-metadata.html">here</a>.</p>
+<p>See also:</p>
+<ul>
+<li><a href="https://abmi.ca/home/publications/501-550/549">Terrestrial Field Data Collection Protocols</a></li>
+<li><a href="https://abmi.ca/home/publications/501-550/548">Wetland Field Data Collection Protocols</a></li>
+<li><a href="https://abmi.ca/home/publications/551-600/565">Terrestrial ABMI Autonomous Recording Unit (ARU) and Remote Camera Trap Protocols</a></li>
+</ul>
 </div>
 <div id="issues" class="section level2">
 <h2 class="hasAnchor">
