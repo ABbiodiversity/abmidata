@@ -14,14 +14,19 @@ remotes::install_github("ABbiodiversity/abmidata")
 
 ## Usage
 
-Load the package
+### Pulling monitoring data
+
+The ABMI public data API pulls information from one of ABMI’s main
+databases.
+
+Load the R package:
 
 ``` r
 library(abmidata)
 #> abmidata 0.0.1    2021-02-11
 ```
 
-List table names
+List names of tables available via the API:
 
 ``` r
 n <- ad_get_table_names()
@@ -35,7 +40,7 @@ data.frame(Description = head(n))
 #> T01C                 T01C Site Capability
 ```
 
-Get a table
+Get a table by its ID, possibly filtered by site ID or by year:
 
 ``` r
 x <- ad_get_table("T01A", year=2010)
@@ -57,7 +62,11 @@ str(x)
 #>  $ Aspect (degrees)      : chr  "VNA" "VNA" "VNA" "VNA" ...
 ```
 
-Handling missing value indicators
+ABMI data has specific placeholders for missing data indicating the
+[reason for the
+missingness](https://abbiodiversity.github.io/abmidata/reference/helpers.html).
+This poses challenges in R when the information is numeric. Here is how
+you can handle these missing value indicators:
 
 ``` r
 y <- x[["Aspect (degrees)"]][1:100]
@@ -89,14 +98,67 @@ summary(ad_process_na(y))
 #>                                                        NA's   :94
 ```
 
+### Processing data
+
+Once tables are loaded using the ABMI public data API, the data usually
+needs to be processed further. The tables are in ‘long format’ which
+means that e.g. sites and species are all in in their own columns:
+
+| Site   | Species | Count |
+| ------ | ------- | ----- |
+| Site 1 | A       | 1     |
+| Site 1 | B       | 2     |
+| Site 1 | C       | 3     |
+| Site 2 | B       | 1     |
+| Site 2 | D       | 2     |
+| Site 3 | E       | 1     |
+
+There are other R packages that can be used to turn the ‘long format’
+data into a ‘wide format’ where e.g. sites represent rows and species
+represent columns:
+
+| Site | A | B | C | D | E |
+| ---- | - | - | - | - | - |
+| 1    | 1 | 2 | 3 | 0 | 0 |
+| 2    | 0 | 1 | 0 | 2 | 0 |
+| 3    | 0 | 0 | 0 | 0 | 1 |
+
+Check out examples of how to do this for vascular plants, mites, mosses,
+lichens, and birds in [this
+article](https://abbiodiversity.github.io/abmidata/articles/abmidata03-commontasks.html)
+about common data processing tasks.
+
+### Matching monitoring data with predictors
+
+Once the monitoring data is in the desired format, one can match the
+site locations (and possibly years) with location/year specific
+predictor variables. One can use the **field data** about site condition
+to explain the distribution, abundance, or other measures of species and
+habitat elements at the ABMI sites.
+
+One can also use **geospatial information** extracted at the site
+coordinates. This, however, poses some challenges because exact site
+coordinates are not publicly available. However, restrictions around
+site confidentiality have been substantially relaxed and coordinates for
+most sites will soon be available for research purposes upon request. We
+will provide relevant information here as soon as it is available. In
+the meantime, please reach out to
+[ABMI](https://www.abmi.ca/home/contact-us.html) for more information.
+
 ## Documentation
 
 See the [package website](https://abbiodiversity.github.io/abmidata) for
 documentation. A list of tables and associated metadata can be found
 [here](https://abbiodiversity.github.io/abmidata/articles/abmidata02-metadata.html).
-Field protocols and the table metadata can be found in [this zip
-file](https://github.com/ABbiodiversity/abmidata/raw/master/metadata/DESCRIPTIONDATA.zip)
-as well.
+
+See also:
+
+  - [Terrestrial Field Data Collection
+    Protocols](https://abmi.ca/home/publications/501-550/549)
+  - [Wetland Field Data Collection
+    Protocols](https://abmi.ca/home/publications/501-550/548)
+  - [Terrestrial ABMI Autonomous Recording Unit (ARU) and Remote Camera
+    Trap Protocols](https://abmi.ca/home/publications/551-600/565)
 
 ## Issues
 
