@@ -19,7 +19,7 @@ jobs:
         run: brew install pandoc
 
       - name: Install dependencies
-        run: Rscript -e 'install.packages(c("httr", "jsonlite", "knitr", "pkgdown", "devtools"))'
+        run: Rscript -e 'install.packages(c("httr", "rmarkdown", "jsonlite", "knitr", "pkgdown", "devtools"))'
 
       - name: Check package
         run: Rscript -e 'devtools::check()'

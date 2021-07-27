@@ -13,7 +13,7 @@ License: MIT + file LICENSE
 LazyLoad: yes
 LazyData: true
 Imports: httr, jsonlite
-Suggests: knitr
+Suggests: knitr, rmarkdown
 URL: https://github.com/abbiodiversity/abmidata
 BugReports: https://github.com/abbiodiversity/abmidata/issues
 VignetteBuilder: knitr
